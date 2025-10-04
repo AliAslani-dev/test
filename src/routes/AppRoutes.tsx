@@ -61,6 +61,17 @@ export default function AppRoutes() {
         )}
       />
 
+          <Route
+        path="/orders"
+        element={withSuspense(
+          <PublicRoute>
+            <MainLayout>
+              <Products />
+            </MainLayout>
+          </PublicRoute>
+        )}
+      />
+
       {/* Optional catch-all redirect */}
       <Route path="*" element={<Navigate to="/auth/login" replace />} />
     </Routes>
