@@ -19,7 +19,7 @@ interface LoginFormInputs {
 const schema = yup.object().shape({
   username: yup.string().required("لطفاً نام کاربری را وارد کنید"),
   password: yup.string().required("لطفاً رمز عبور را وارد کنید"),
-});
+});  
 
 export default function LogIn() {
   const navigate = useNavigate();
@@ -38,17 +38,29 @@ export default function LogIn() {
     mutate(data, {
       onSuccess: (res) => {
         console.log(res, ":::: data");
-        localStorage.setItem("accessToken", res?.data?.accessToken);
-        toast.success(" ورود موفق!", {
+        localStorage.setItem("accessToken", res?.data?.access_token
+        );
+        toast.success("ورود موفق!", {
           style: { fontFamily: "Vazir, sans-serif" },
         });
         navigate("/dashboard");
       },
-      onError: () => {
-        toast.error("خطا در ورود", {
-          style: { fontFamily: "Vazir, sans-serif" },
-        });
-      },
+      onError: (err: any) => {
+        // 1. Try array format first
+        const apiArray = err?.response?.data?.detail;
+
+        if (Array.isArray(apiArray)) {
+          // map over array and show first message or all
+          const firstMessage = apiArray[0]?.msg || "خطا در ورود";
+          toast.error(firstMessage, { style: { fontFamily: "Vazir, sans-serif" } });
+        } else if (typeof apiArray === "string") {
+          // string format
+          toast.error(apiArray, { style: { fontFamily: "Vazir, sans-serif" } });
+        } else {
+          // fallback
+          toast.error("خطا در ورود", { style: { fontFamily: "Vazir, sans-serif" } });
+        }
+      }
     });
   };
 
@@ -100,6 +112,20 @@ export default function LogIn() {
             <Button type="submit" className="w-full mt-2" disabled={isPending}>
               {isPending ? "در حال ورود..." : "ورود"}
             </Button>
+
+
+            {/* Sign Up */}
+            <div className="text-center mt-3">
+              <span className="text-gray-600">حساب کاربری ندارید؟ </span>
+              <Button
+                type="button"
+                variant="outline"
+                className="ml-2 px-4 py-2 text-sm"
+                onClick={() => navigate("/auth/signup")}
+              >
+                ثبت نام
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

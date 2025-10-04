@@ -1,72 +1,49 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Eye, ThumbsUp, ThumbsDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-type Reaction = {
-  likes: number;
-  dislikes: number;
-};
 
-export type Post = {
+export type Product = {
   id: number;
-  title: string;
-  body: string;
-  tags: string[];
-  reactions: Reaction;
-  views: number;
-  userId: number;
+  image: string; // base64 or URL
+  name: string;
+  price: number;
 };
 
-interface PostCardProps {
-  post: Post;
+interface ProductCardProps {
+  product: Product;
 }
 
-export default function PostCard({ post }: PostCardProps) {
-  const navigate = useNavigate();
-  const navigateToSinglePost = (id: Post["id"]) => {
-    navigate(`/posts/${id}`);
-  };
+export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Card
-      onClick={() => navigateToSinglePost(post?.id)}
-      style={{ cursor: "pointer" }}
-      className="overflow-hidden rounded-xl border border-transparent hover:border-blue-400 hover:shadow-2xl transition-all duration-300 bg-gradient-to-b from-white to-gray-50"
+      className="flex items-center gap-5 p-5 rounded-2xl border border-gray-100 
+                 hover:border-blue-400 hover:shadow-2xl hover:-translate-y-1 
+                 transition-all duration-300 cursor-pointer bg-gradient-to-br from-white to-gray-50"
     >
-      {/* Header */}
+      {/* Image Thumbnail */}
+      <div className="relative flex-shrink-0">
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-24 h-24 object-cover rounded-xl shadow-md transition-transform duration-500 hover:scale-105"
+        />
+        <div className="absolute inset-0 rounded-xl bg-black/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+      </div>
 
-      <CardHeader className="flex flex-col gap-2 pb-0">
-        <CardTitle className="text-base md:text-lg font-bold line-clamp-1 text-gray-800">
-          {post.title}
-        </CardTitle>
-        <div className="flex items-center gap-3 text-sm text-gray-500">
-          <span className="flex items-center gap-1">
-            <Eye className="w-4 h-4 text-blue-400" /> {post.views}
-          </span>
-          <span className="flex items-center gap-1">
-            <ThumbsUp className="w-4 h-4 text-green-500" />{" "}
-            {post.reactions.likes}
-          </span>
-          <span className="flex items-center gap-1">
-            <ThumbsDown className="w-4 h-4 text-red-500" />{" "}
-            {post.reactions.dislikes}
-          </span>
-        </div>
-      </CardHeader>
+      {/* Product Info */}
+      <div className="flex-1 flex flex-col justify-between">
+        <CardHeader className="p-0">
+          <CardTitle className="text-xl font-bold text-gray-800 tracking-tight line-clamp-1">
+            {product.name}
+          </CardTitle>
+        </CardHeader>
 
-      {/* Content */}
-      <CardContent className="pt-2">
-        <p className="text-sm text-gray-700 line-clamp-3">{post.body}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
-            <Badge
-              key={tag}
-              className="bg-gradient-to-r from-blue-400 to-purple-500 text-white text-xs px-3 py-1 rounded-full shadow-md"
-            >
-              #{tag}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
+        <CardContent className="p-0 mt-1">
+          <p className="text-lg font-semibold text-blue-600">
+
+            {product.price.toLocaleString()}
+            <span className="text-gray-500 text-sm">تومان</span>
+          </p>
+        </CardContent>
+      </div>
     </Card>
   );
 }

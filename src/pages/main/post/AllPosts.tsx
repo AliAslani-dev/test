@@ -1,11 +1,12 @@
 import PostCard from "./components/PostCard";
-import type { Post } from "./components/PostCard";
-import { useGetPosts } from "@/query/post/usePost";
+import type { Product } from "./components/PostCard";
+import { useGetProducts } from "@/query/post/usePost";
 import PostModal from "./components/dialog/PostModal";
 import { Button } from "@/components/ui/button";
 export default function AllPosts() {
-  const { data, isLoading, error, refetch } = useGetPosts();
-  const posts: Post[] = data?.data?.posts ?? [];
+  const { data, isLoading, error, refetch } = useGetProducts();
+  console.log(data)
+  const products: Product[] = data?.data?.products ?? [];
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Something went wrong 😢</p>;
@@ -20,13 +21,13 @@ export default function AllPosts() {
 
       {/* Posts grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post) => (
-          <div key={post.id} className="relative">
-            <PostCard post={post} />
+        {products.map((product) => (
+          <div key={product.id} className="relative">
+            <PostCard product={product} />
             <div className="absolute top-2 right-2">
               <PostModal
                 mode="edit"
-                post={{ id: post.id, title: post.title, body: post.body }}
+                product={{ id: product.id, name: product.name , image : product.image , price : product.price}}
                 trigger={<Button size="sm">Edit</Button>}
                 onSuccess={refetch}
               />

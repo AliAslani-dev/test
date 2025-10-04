@@ -1,4 +1,4 @@
-import { loginUrl } from "@/constants/apiUrls";
+import { AuthUrl } from "@/constants/apiUrls";
 import { apiClient } from "./axiosClient";
 
 interface LoginPayload {
@@ -6,9 +6,16 @@ interface LoginPayload {
   password: string;
 }
 
+interface SignUpPayload {
+  username: string | null;
+  password: string;
+}
+
 const authApi = {
   login: (data: LoginPayload) =>
-    apiClient.post(loginUrl, data),
+    apiClient.post(`${AuthUrl}/login`, data),
+  SignUp: (data: SignUpPayload) =>
+    apiClient.post(`${AuthUrl}/new-user`, data),
 };
 
 export default authApi;

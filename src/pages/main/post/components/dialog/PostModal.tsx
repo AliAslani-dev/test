@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -11,32 +11,50 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import FileUpload from "@/components/shared/FileUpload";
+import { useCreateProduct, useEditProduct } from "@/query/post/usePost";
 
 // Validation schema
 const schema = yup.object().shape({
-  title: yup.string().required("Title is required"),
-  content: yup.string().required("Content is required"),
+  name: yup.string().required("Product name is required"),
+  price: yup
+    .number()
+    .typeError("Price must be a number")
+    .positive("Price must be positive")
+    .required("Price is required"),
 });
 
 type FormValues = {
-  title: string;
-  content: string;
+  name: string;
+  price: number;
+};
+
+type Product = {
+  id: number;
+  name: string;
+  image: string;
+  price: number;
 };
 
 type PostModalProps = {
-  post?: { id: number; title: string; body: string };
+  product?: Product;
   mode?: "add" | "edit";
   trigger?: React.ReactNode;
   onSuccess?: () => void;
 };
 
 export default function PostModal({
-  post,
+  product,
   mode = "add",
   trigger,
   onSuccess,
 }: PostModalProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const createProduct = useCreateProduct();
+  const editProduct = useEditProduct();
+
   const {
     register,
     handleSubmit,
@@ -44,84 +62,79 @@ export default function PostModal({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: yupResolver(schema),
-    defaultValues: {
-      title: "",
-      content: "",
-    },
+    defaultValues: { name: "", price: 0 },
   });
 
-  // Reset form when post changes (edit mode)
+  // Reset form when modal opens
   useEffect(() => {
-    if (post) {
-      reset({
-        title: post.title,
-        content: post.body,
-      });
-    }
-  }, [post, reset]);
-
-  const onSubmit = async (data: FormValues) => {
-    try {
-      let response;
-      if (mode === "add") {
-        response = await fetch("https://dummyjson.com/posts/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: data.title,
-            body: data.content,
-            userId: 5,
-          }),
-        });
-      } else if (mode === "edit" && post) {
-        response = await fetch(`https://dummyjson.com/posts/${post.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: data.title,
-            body: data.content,
-          }),
-        });
+    if (open) {
+      if (product) {
+        reset({ name: product.name, price: product.price });
+        setSelectedFile(null);
+      } else {
+        reset({ name: "", price: 0 });
+        setSelectedFile(null);
       }
+    }
+  }, [open, product, reset]);
 
-      const result = await response?.json();
-      console.log("API result:", result);
+  const onSubmit = (data: FormValues) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("price", data.price.toString());
+    if (selectedFile) formData.append("image", selectedFile);
 
-      if (onSuccess) onSuccess();
-      reset();
-    } catch (error) {
-      console.error("API error:", error);
+    if (mode === "add") {
+      createProduct.mutate(formData, {
+        onSuccess: () => {
+          reset();
+          setSelectedFile(null);
+          if (onSuccess) onSuccess();
+          setOpen(false); // ✅ close modal
+        },
+      });
+    } else if (mode === "edit" && product) {
+      editProduct.mutate(
+        { id: product.id.toString(), formData },
+        {
+          onSuccess: () => {
+            reset();
+            setSelectedFile(null);
+            if (onSuccess) onSuccess();
+            setOpen(false); // ✅ close modal
+          },
+        }
+      );
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger ?? <Button>{mode === "add" ? "+ Add Post" : "Edit"}</Button>}
+        {trigger ?? <Button>{mode === "add" ? "+ Add Product" : "Edit"}</Button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {mode === "add" ? "Add New Post" : "Edit Post"}
-          </DialogTitle>
+          <DialogTitle>{mode === "add" ? "Add Product" : "Edit Product"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Input placeholder="Post Title" {...register("title")} />
-            {errors.title && (
-              <p className="text-red-500 text-sm">{errors.title.message}</p>
-            )}
-          </div>
+          <Input placeholder="Product Name" {...register("name")} />
+          {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
 
-          <div>
-            <Textarea placeholder="Post Content" {...register("content")} />
-            {errors.content && (
-              <p className="text-red-500 text-sm">{errors.content.message}</p>
-            )}
-          </div>
+          <Input
+            type="number"
+            placeholder="Price"
+            {...register("price", { valueAsNumber: true })}
+          />
+          {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
 
-          <div className="flex justify-end gap-2">
+          <FileUpload
+            initialImage={product?.image}
+            onFileSelect={(file) => setSelectedFile(file)}
+          />
+
+          <div className="flex justify-end gap-2 mt-4">
             <Button type="submit">{mode === "add" ? "Save" : "Update"}</Button>
           </div>
         </form>

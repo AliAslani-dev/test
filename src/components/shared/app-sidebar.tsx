@@ -14,8 +14,8 @@ import {
 // Menu items.
 const items = [
   {
-    title: "posts",
-    url: "/posts",
+    title: "محصولات",
+    url: "/products",
     icon: ReceiptCentIcon,
   },
   {

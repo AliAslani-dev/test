@@ -1,6 +1,6 @@
 // auth
-export const loginUrl = `/auth/login`;
+export const AuthUrl = `/accounts`;
 
-// posts
-export const PostsUrl = `/posts`;
+// products
+export const ProductUrl = `/products`;
 
